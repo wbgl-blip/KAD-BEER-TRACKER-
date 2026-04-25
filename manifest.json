@@ -1,0 +1,38 @@
+{
+  "name": "Kyle's A Dick - Year on Tap",
+  "short_name": "KAD Tracker",
+  "description": "Beer tracking app by Kyle's A Dick",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Log a Beer",
+      "short_name": "+1 Beer",
+      "description": "Quickly log a Busch Light",
+      "url": "./index.html?action=quicklog"
+    },
+    {
+      "name": "Shotgun Timer",
+      "short_name": "Shotgun",
+      "description": "Start the shotgun timer",
+      "url": "./index.html?tab=shotgun"
+    }
+  ],
+  "icons": [
+    {
+      "src": "./icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}
