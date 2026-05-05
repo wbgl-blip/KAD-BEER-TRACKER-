@@ -306,6 +306,10 @@
         <div class="card"><div class="g-num" id="spent-num">$0.00</div><div class="s-lab">Total Spent</div></div>
         <div class="card"><div class="g-num" id="abv-num">0.0%</div><div class="s-lab">Avg ABV</div></div>
       </div>
+      <div class="r2" style="flex-shrink:0">
+        <div class="card"><div class="g-num" style="color:var(--ylw)" id="cals-num">0</div><div class="s-lab">🔥 Calories</div></div>
+        <div class="card"><div class="g-num" style="color:var(--ylw)" id="carbs-num">0g</div><div class="s-lab">🍞 Carbs</div></div>
+      </div>
       <div class="card" style="flex-shrink:0">
         <div style="display:flex;justify-content:space-between">
           <span style="font-weight:700;font-size:13px">Goal</span>
@@ -790,26 +794,26 @@
 
 <script>
 const BEER_DB = [
-  { name:"Busch",         style:"American Lager",  abv:4.3, price:1.75 },
-  { name:"Busch Light",   style:"Light Lager",     abv:4.1, price:1.75 },
-  { name:"Bud Light",     style:"Light Lager",     abv:4.2, price:2.50 },
-  { name:"Budweiser",     style:"American Lager",  abv:5.0, price:3.00 },
-  { name:"Miller Lite",   style:"Light Lager",     abv:4.2, price:2.50 },
-  { name:"Coors Light",   style:"Light Lager",     abv:4.2, price:2.50 },
-  { name:"PBR",           style:"American Lager",  abv:4.7, price:2.00 },
-  { name:"Yuengling",     style:"Amber Lager",     abv:4.4, price:3.00 },
-  { name:"Blue Moon",     style:"Wheat Ale",       abv:5.4, price:4.00 },
-  { name:"Corona",        style:"Mexican Lager",   abv:4.6, price:3.50 },
-  { name:"Modelo",        style:"Mexican Lager",   abv:4.4, price:3.50 },
-  { name:"Heineken",      style:"Euro Lager",      abv:5.0, price:4.00 },
-  { name:"Guinness",      style:"Dry Stout",       abv:4.2, price:5.00 },
-  { name:"Sam Adams",     style:"Vienna Lager",    abv:4.9, price:4.50 },
-  { name:"Dogfish IPA",   style:"IPA",             abv:6.0, price:5.50 },
-  { name:"White Claw",    style:"Hard Seltzer",    abv:5.0, price:3.00 },
-  { name:"High Noon",     style:"Hard Seltzer",    abv:4.5, price:3.50 },
-  { name:"Michelob Ultra",style:"Light Lager",     abv:4.2, price:3.00 },
-  { name:"Natty Light",   style:"Light Lager",     abv:4.2, price:1.50 },
-  { name:"Rolling Rock",  style:"Extra Pale",      abv:4.5, price:2.50 },
+  { name:"Busch",         style:"American Lager",  abv:4.3, price:1.75, cals:114, carbs:6.9  },
+  { name:"Busch Light",   style:"Light Lager",     abv:4.1, price:1.75, cals:95,  carbs:3.2  },
+  { name:"Bud Light",     style:"Light Lager",     abv:4.2, price:2.50, cals:110, carbs:6.6  },
+  { name:"Budweiser",     style:"American Lager",  abv:5.0, price:3.00, cals:145, carbs:10.6 },
+  { name:"Miller Lite",   style:"Light Lager",     abv:4.2, price:2.50, cals:96,  carbs:3.2  },
+  { name:"Coors Light",   style:"Light Lager",     abv:4.2, price:2.50, cals:102, carbs:5.0  },
+  { name:"PBR",           style:"American Lager",  abv:4.7, price:2.00, cals:144, carbs:12.8 },
+  { name:"Yuengling",     style:"Amber Lager",     abv:4.4, price:3.00, cals:128, carbs:11.0 },
+  { name:"Blue Moon",     style:"Wheat Ale",       abv:5.4, price:4.00, cals:171, carbs:13.0 },
+  { name:"Corona",        style:"Mexican Lager",   abv:4.6, price:3.50, cals:148, carbs:13.9 },
+  { name:"Modelo",        style:"Mexican Lager",   abv:4.4, price:3.50, cals:143, carbs:13.6 },
+  { name:"Heineken",      style:"Euro Lager",      abv:5.0, price:4.00, cals:142, carbs:11.4 },
+  { name:"Guinness",      style:"Dry Stout",       abv:4.2, price:5.00, cals:125, carbs:9.6  },
+  { name:"Sam Adams",     style:"Vienna Lager",    abv:4.9, price:4.50, cals:180, carbs:18.0 },
+  { name:"Dogfish IPA",   style:"IPA",             abv:6.0, price:5.50, cals:206, carbs:15.0 },
+  { name:"White Claw",    style:"Hard Seltzer",    abv:5.0, price:3.00, cals:100, carbs:2.0  },
+  { name:"High Noon",     style:"Hard Seltzer",    abv:4.5, price:3.50, cals:100, carbs:3.0  },
+  { name:"Michelob Ultra",style:"Light Lager",     abv:4.2, price:3.00, cals:95,  carbs:2.6  },
+  { name:"Natty Light",   style:"Light Lager",     abv:4.2, price:1.50, cals:95,  carbs:3.2  },
+  { name:"Rolling Rock",  style:"Extra Pale",      abv:4.5, price:2.50, cals:132, carbs:10.0 },
 ];
 
 const ROASTS = [
@@ -921,6 +925,8 @@ function addLog(beer, qty, price, loc) {
     id: Date.now(), ts: Date.now(),
     name: beer.name, style: beer.style, abv: beer.abv,
     price: parseFloat(price)||beer.price,
+    cals: (beer.cals||150) * qty,
+    carbs: (beer.carbs||10) * qty,
     qty, date: nowStr(), time: timeStr(), loc: loc||''
   };
   logs.unshift(entry);
@@ -945,7 +951,9 @@ function getStats() {
   const avgAbv = total ? (logs.reduce((a,l)=>a+l.abv*l.qty,0)/total).toFixed(1) : '0.0';
   const streak = calcStreak(logs);
   const maxDay = calcMaxDay(logs);
-  return {today,total,todayN,weekN,monthN,spent,avgAbv,streak,maxDay};
+  const totalCals = logs.reduce((a,l)=>a+(l.cals||l.qty*150),0);
+  const totalCarbs = logs.reduce((a,l)=>a+(l.carbs||l.qty*10),0);
+  return {today,total,todayN,weekN,monthN,spent,avgAbv,streak,maxDay,totalCals,totalCarbs};
 }
 
 function updateAll() {
@@ -960,6 +968,10 @@ function updateAll() {
   document.getElementById('month-num').textContent = s.monthN;
   document.getElementById('spent-num').textContent = '$'+s.spent.toFixed(2);
   document.getElementById('abv-num').textContent = s.avgAbv+'%';
+  const calsEl = document.getElementById('cals-num');
+  const carbsEl = document.getElementById('carbs-num');
+  if(calsEl) calsEl.textContent = s.totalCals.toLocaleString();
+  if(carbsEl) carbsEl.textContent = s.totalCarbs.toFixed(1)+'g';
   document.getElementById('goal-label').textContent = s.total+'/'+goal;
   document.getElementById('goal-bar').style.width = pct+'%';
   document.getElementById('goal-pct').textContent = pct+'% used';
@@ -1185,7 +1197,7 @@ function renderBeerGrid() {
     const sel = selBeer&&selBeer.name===b.name;
     return `<div class="beer-card ${sel?'selected':''}" onclick="selectBeer('${b.name}')">
       <div class="bname">${b.name}</div>
-      <div class="bmeta">${b.style}<br/>${b.abv}% ABV</div>
+      <div class="bmeta">${b.style}<br/>${b.abv}% ABV<br/><span style="color:var(--ylw)">🔥${b.cals||0} cal · 🍞${b.carbs||0}g</span></div>
     </div>`;
   }).join('');
 }
@@ -1199,7 +1211,7 @@ function selectBeer(name) {
   const panel = document.getElementById('selected-beer-panel');
   panel.style.display = 'block';
   document.getElementById('sel-beer-name').textContent = selBeer.name+' — '+selBeer.abv+'%';
-  document.getElementById('sel-beer-meta').textContent = selBeer.style+'\n'+selBeer.abv+'% ABV\nDefault $'+selBeer.price.toFixed(2);
+  document.getElementById('sel-beer-meta').textContent = selBeer.style+'\n'+selBeer.abv+'% ABV · 🔥'+selBeer.cals+'cal · 🍞'+selBeer.carbs+'g\nDefault $'+selBeer.price.toFixed(2);
   document.getElementById('add-price').value = selBeer.price;
   document.getElementById('add-beer-btn').textContent = 'ADD '+addQty+'x '+selBeer.name.toUpperCase();
   document.getElementById('custom-card').style.display='none';
@@ -1262,7 +1274,7 @@ function overlayClick(e) { if(e.target===document.getElementById('overlay')) clo
 function closeOverlay() { document.getElementById('overlay').classList.remove('show'); }
 
 function renderQABeers() {
-  document.getElementById('qa-beers').innerHTML = BEER_DB.slice(0,10).map(b=>`
+  document.getElementById('qa-beers').innerHTML = BEER_DB.map(b=>`
     <button onclick="setQaBeer('${b.name}')" style="background:${qaBeer.name===b.name?'var(--gdk)':'var(--card2)'};border:1px solid ${qaBeer.name===b.name?'var(--g)':'var(--bdr)'};border-radius:9px;color:${qaBeer.name===b.name?'var(--g)':'var(--txt)'};font-size:9px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'Oswald',sans-serif">
       ${b.name}
     </button>`).join('');
