@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.json"/>
+<title>KAD Beer Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --g:#4ade80;--gd:#22c55e;--gdk:#052e16;
+  --bg:#080c08;--card:#0f1a0f;--card2:#162116;
+  --bdr:#1f3320;--txt:#f0faf0;--mut:#4b7a52;
+  --red:#ef4444;--ylw:#f5c518;--blu:#38bdf8;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Oswald',sans-serif;color:var(--txt)}
+input,button,select{font-family:'Oswald',sans-serif}
+input::placeholder{color:var(--mut)}
+button:active{transform:scale(0.95)}
+::-webkit-scrollbar{display:none}
+
+#app{
+  height:100vh;height:100dvh;
+  max-width:430px;margin:0 auto;
+  display:flex;flex-direction:column;
+  overflow:hidden;position:relative;
+}
+
+/* TOP BAR */
+#topbar{
+  flex-shrink:0;padding:10px 14px 8px;
+  background:linear-gradient(180deg,#0d1a0f,var(--bg));
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+}
+#topbar .title{font-size:20px;font-weight:800;letter-spacing:1px}
+#topbar .sub{font-size:9px;color:var(--g);letter-spacing:3px;font-weight:600}
+.rank-badge{
+  display:flex;align-items:center;gap:5px;
+  background:var(--card2);border:1px solid var(--bdr);
+  border-radius:20px;padding:5px 10px;cursor:pointer;
+}
+.rank-badge span{font-size:11px;font-weight:700;color:var(--mut)}
+
+/* NAV */
+#nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  display:flex;padding:6px 8px 20px;gap:3px;
+  background:#080c08;border-top:1px solid var(--bdr);
+  z-index:100;
+}
+.nav-btn{
+  flex:1;background:transparent;border:none;border-radius:8px;
+  color:var(--mut);font-size:17px;padding:8px 0;cursor:pointer;
+  transition:all 0.2s;
+}
+.nav-btn.active{background:var(--gdk);color:var(--g);font-size:10px;font-weight:700;border:1px solid var(--bdr)}
+
+/* CONTENT */
+#content{
+  flex:1;overflow:hidden;display:flex;flex-direction:column;
+  padding:8px 12px 0;gap:7px;margin-bottom:72px;
+}
+.tab{display:none;flex-direction:column;gap:7px;flex:1;overflow:hidden}
+.tab.active{display:flex}
+.scroll-inner{overflow-y:auto;flex:1}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:13px;padding:11px}
+.card2{background:var(--card2)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.g-num{font-size:26px;font-weight:800;color:var(--g)}
+.s-lab{font-size:9px;color:var(--mut);letter-spacing:1px;margin-top:2px;font-weight:600}
+.inp{
+  background:var(--card2);border:1px solid var(--bdr);border-radius:8px;
+  color:var(--txt);padding:9px 11px;font-size:13px;width:100%;outline:none;
+}
+.inp:focus{border-color:var(--g)}
+.btn-g{
+  width:100%;padding:14px;background:var(--g);border:none;border-radius:12px;
+  color:#000;font-weight:800;font-size:15px;cursor:pointer;letter-spacing:1px;
+  font-family:'Oswald',sans-serif;
+}
+.btn-g:active{background:var(--gd)}
+.btn-outline{
+  background:transparent;border:1px solid var(--bdr);border-radius:8px;
+  color:var(--mut);padding:7px 12px;cursor:pointer;font-size:11px;font-weight:700;
+  font-family:'Oswald',sans-serif;letter-spacing:1px;
+}
+.btn-outline.active{border-color:var(--g);color:var(--g);background:var(--gdk)}
+
+/* HOME */
+.goal-bar-bg{background:var(--card2);border-radius:4px;height:6px;margin:8px 0 4px;overflow:hidden}
+.goal-bar-fill{background:var(--g);height:100%;border-radius:4px;transition:width 0.4s}
+.log-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.log-row:last-child{border-bottom:none}
+.log-name{font-size:13px;font-weight:700;flex:1}
+.log-meta{font-size:10px;color:var(--mut);margin-top:1px}
+.log-abv{font-size:12px;font-weight:700;color:var(--g)}
+
+/* BEER GRID */
+#beer-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.beer-card{
+  background:var(--card);border:1px solid var(--bdr);border-radius:11px;
+  padding:10px;cursor:pointer;transition:border-color 0.15s;
+}
+.beer-card.selected{border:2px solid var(--g);background:var(--gdk)}
+.bname{font-size:12px;font-weight:800;color:var(--txt)}
+.bmeta{font-size:9px;color:var(--mut);margin-top:3px;line-height:1.6}
+
+/* SHOTGUN */
+.sg-timer{font-size:72px;font-weight:800;text-align:center;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.sg-mode-btn{flex:1;padding:8px;border:1px solid var(--bdr);border-radius:8px;background:transparent;color:var(--mut);font-size:11px;font-weight:700;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:1px}
+.sg-mode-btn.active{background:var(--gdk);border-color:var(--g);color:var(--g)}
+.lb-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr)}
+.lb-row:last-child{border-bottom:none}
+
+/* TRAIL */
+.trail-tab-btn{flex:1;padding:8px;border:1px solid var(--bdr);border-radius:8px;background:transparent;color:var(--mut);font-size:11px;font-weight:700;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:1px}
+.trail-tab-btn.active{background:var(--gdk);border-color:var(--g);color:var(--g)}
+.bar-card{background:var(--card2);border:1px solid var(--bdr);border-radius:11px;padding:10px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+
+/* OVERLAY */
+#overlay{
+  display:none;position:fixed;inset:0;background:#000a;
+  z-index:200;align-items:flex-end;justify-content:center;
+}
+#overlay.show{display:flex}
+.sheet{
+  background:var(--card);border:1px solid var(--bdr);
+  border-radius:20px 20px 0 0;padding:18px 16px 30px;
+  width:100%;max-width:430px;
+}
+.pill-row{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px}
+.pill{
+  flex-shrink:0;background:var(--card2);border:1px solid var(--bdr);
+  border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;
+  color:var(--mut);cursor:pointer;white-space:nowrap;
+}
+.pill.active{background:var(--gdk);border-color:var(--g);color:var(--g)}
+
+/* SHARE CARD */
+#share-card{
+  display:none;position:fixed;inset:0;background:#000b;
+  z-index:300;align-items:center;justify-content:center;
+}
+#share-card.show{display:flex}
+.stats-card{
+  background:var(--card);border:2px solid var(--g);border-radius:20px;
+  padding:24px 20px;width:88%;max-width:360px;text-align:center;position:relative;
+}
+
+/* TOAST */
+#toast{
+  display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:var(--g);color:#000;font-weight:800;font-size:13px;
+  padding:9px 20px;border-radius:20px;z-index:400;letter-spacing:1px;
+  white-space:nowrap;
+}
+
+/* SPLASH */
+#splash{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.6s ease;
+}
+#splash img{width:70%;max-width:280px;border-radius:20px}
+@keyframes pop{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+#splash img{animation:pop 0.5s ease-out}
+
+/* HEATMAP */
+.hm-cell{width:11px;height:11px;border-radius:2px;background:var(--card2)}
+.hm-cell.d1{background:#14532d}.hm-cell.d2{background:#166534}.hm-cell.d3{background:#16a34a}.hm-cell.d4{background:#22c55e}.hm-cell.d5{background:#4ade80}
+</style>
+</head>
+<body>
+<div id="splash">
+  <img src="icon.jpg" alt="KAD" onerror="this.style.display='none';document.querySelector('#splash .fb').style.display='block'"/>
+  <div class="fb" style="display:none;font-size:48px">🍺</div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <div>
+      <div class="title">Kyle's A Dick</div>
+      <div class="sub">YEAR ON TAP 🍺</div>
+    </div>
+    <div class="rank-badge" onclick="showShareCard()">
+      <span id="rank-icon">🌱</span>
+      <span id="rank-name">Rookie</span>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- HOME TAB -->
+    <div id="tab-home" class="tab active">
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="g-num" id="total-num" style="font-size:48px;line-height:1">0</div>
+            <div class="s-lab">BEERS THIS YEAR</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:22px" id="rank-icon2">🌱</div>
+            <div style="font-size:12px;font-weight:700;color:var(--mut)" id="rank-name2">Rookie</div>
+            <button onclick="showShareCard()" style="margin-top:5px;background:none;border:1px solid var(--g);border-radius:6px;color:var(--g);font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:1px">SHARE CARD</button>
+          </div>
+        </div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut)">
+          <span id="goal-pct">0%</span>
+          <span id="goal-label">0/200</span>
+          <span id="goal-left">200 left</span>
+        </div>
+      </div>
+      <div class="r3" style="flex-shrink:0">
+        <div class="card"><div class="g-num" id="today-num">0</div><div class="s-lab">TODAY</div></div>
+        <div class="card"><div class="g-num" id="week-num">0</div><div class="s-lab">WEEK</div></div>
+        <div class="card"><div class="g-num" id="month-num">0</div><div class="s-lab">MONTH</div></div>
+      </div>
+      <div class="r2" style="flex-shrink:0">
+        <div class="card"><div class="g-num" id="spent-num">$0</div><div class="s-lab">TOTAL SPENT</div></div>
+        <div class="card"><div class="g-num" id="abv-num">0.0%</div><div class="s-lab">AVG ABV</div></div>
+      </div>
+      <div class="r2" style="flex-shrink:0">
+        <div class="card"><div class="g-num" style="color:var(--ylw)" id="cals-num">0</div><div class="s-lab">🔥 CALORIES</div></div>
+        <div class="card"><div class="g-num" style="color:var(--ylw)" id="carbs-num">0g</div><div class="s-lab">🍞 CARBS</div></div>
+      </div>
+      <button class="btn-g" style="flex-shrink:0;font-size:18px;padding:18px" onclick="openQuickAdd()">+ LOG A BEER</button>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>LAST LOGGED</span>
+          <button onclick="undoLast()" style="background:none;border:none;color:var(--red);font-size:10px;font-weight:700;cursor:pointer;font-family:'Oswald',sans-serif">UNDO</button>
+        </div>
+        <div id="recent-log" class="scroll-inner"><div style="color:var(--mut);font-size:11px">Nothing yet. Get drinkin'.</div></div>
+      </div>
+    </div>
+
+    <!-- SESSION TAB -->
+    <div id="tab-session" class="tab">
+      <div class="card" style="flex-shrink:0;text-align:center">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:2px;margin-bottom:4px">SESSION TIMER</div>
+        <div style="font-size:44px;font-weight:800;font-variant-numeric:tabular-nums" id="sess-timer">00:00:00</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px" id="sess-status">Not started</div>
+      </div>
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">DRUNK-O-METER</div>
+        <div style="background:var(--card2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:5px">
+          <div id="dom-fill" style="height:100%;border-radius:6px;background:var(--g);width:0%;transition:width 0.5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px">
+          <span style="color:var(--g)">Sober</span>
+          <span id="dom-label" style="font-weight:700">Sober 😇</span>
+          <span style="color:var(--red)">Wrecked</span>
+        </div>
+        <div style="text-align:center;font-size:18px;font-weight:800;margin-top:5px" id="bac-num">BAC: 0.000</div>
+      </div>
+      <div class="r2" style="flex-shrink:0">
+        <div class="card" style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--g)" id="sess-beers">0</div>
+          <div class="s-lab">SESSION BEERS</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--ylw)" id="sess-pace">0/hr</div>
+          <div class="s-lab">PACE</div>
+        </div>
+      </div>
+      <div class="r2" style="flex-shrink:0">
+        <button class="btn-g" id="sess-btn" onclick="toggleSession()">START SESSION</button>
+        <button onclick="openQuickAdd()" style="background:var(--card2);border:1px solid var(--bdr);border-radius:12px;color:var(--txt);font-weight:800;font-size:13px;cursor:pointer;font-family:'Oswald',sans-serif">+ LOG BEER</button>
+      </div>
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">SESSION BEERS</div>
+        <div id="sess-log" style="max-height:120px;overflow-y:auto"><div style="color:var(--mut);font-size:11px">Start session to track</div></div>
+      </div>
+    </div>
+
+    <!-- SHOTGUN TAB -->
+    <div id="tab-shotgun" class="tab">
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;gap:5px;margin-bottom:10px">
+          <button class="sg-mode-btn active" id="sgm-solo" onclick="setSgMode('solo')">SOLO</button>
+          <button class="sg-mode-btn" id="sgm-tallboy" onclick="setSgMode('tallboy')">TALLBOY</button>
+          <button class="sg-mode-btn" id="sgm-relay" onclick="setSgMode('relay')">RELAY</button>
+        </div>
+        <div class="sg-timer" id="sg-display" style="color:var(--g)">0.000</div>
+        <div style="text-align:center;font-size:11px;color:var(--mut);margin-top:4px" id="sg-sub">TAP TO START</div>
+        <div id="sg-relay-panel" style="display:none;margin-top:8px">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:5px">RELAY LEGS</div>
+          <div id="relay-legs-display"></div>
+          <div class="r2" style="gap:5px;margin-top:6px">
+            <button onclick="addRelayLeg()" class="btn-outline">+ ADD LEG</button>
+            <button onclick="clearRelayLegs()" class="btn-outline">CLEAR</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-g" id="sg-start-btn" onclick="sgAction()" style="flex-shrink:0;font-size:20px;padding:18px">💨 START SHOTGUN</button>
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px">🌍 GLOBAL LEADERBOARD</div>
+          <button onclick="renderGlobalShotgunBoard()" class="btn-outline" style="font-size:9px;padding:3px 8px">REFRESH</button>
+        </div>
+        <div id="sg-global-board"><div style="color:var(--mut);font-size:10px;text-align:center;padding:6px">Tap refresh to load</div></div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px">MY TIMES</div>
+          <button onclick="resetShotguns()" class="btn-outline" style="font-size:9px;padding:3px 8px">RESET</button>
+        </div>
+        <div id="sg-history" class="scroll-inner"></div>
+      </div>
+    </div>
+
+    <!-- CONCERT TAB -->
+    <div id="tab-concert" class="tab">
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">🎸 CONCERT / FESTIVAL MODE</div>
+        <input class="inp" id="c-name" placeholder="Event name..." style="margin-bottom:7px"/>
+        <div class="r2" style="gap:7px;margin-bottom:7px">
+          <input class="inp" id="c-days" placeholder="# of days" type="number" min="1" max="10"/>
+          <input class="inp" id="c-abv" placeholder="Avg ABV %" type="number"/>
+        </div>
+        <button class="btn-g" onclick="toggleConcert()">START EVENT</button>
+      </div>
+      <div class="card" id="c-active-panel" style="flex-shrink:0;display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:800" id="c-event-name">Event</div>
+          <button onclick="toggleConcert()" class="btn-outline" style="font-size:9px;padding:3px 8px">END</button>
+        </div>
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">LOG FOR DAY</div>
+        <div id="c-day-btns" class="r3" style="gap:5px;margin-bottom:8px"></div>
+        <div class="r3" style="gap:5px">
+          <button onclick="concertLog(1)" class="btn-g" style="font-size:13px;padding:10px">+1</button>
+          <button onclick="concertLog(2)" class="btn-g" style="font-size:13px;padding:10px;background:var(--gd)">+2</button>
+          <button onclick="concertLog(3)" class="btn-g" style="font-size:13px;padding:10px;background:var(--gdk);color:var(--g);border:1px solid var(--g)">+3</button>
+        </div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">BREAKDOWN</div>
+        <div id="c-stats" class="scroll-inner"><div style="color:var(--mut);font-size:11px">Start an event above</div></div>
+      </div>
+    </div>
+
+    <!-- TRAIL TAB -->
+    <div id="tab-trail" class="tab">
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;gap:5px;margin-bottom:10px">
+          <button class="trail-tab-btn active" id="trail-near-btn" onclick="setTrailMode('near')">NEAR ME</button>
+          <button class="trail-tab-btn" id="trail-ab-btn" onclick="setTrailMode('ab')">A → B</button>
+          <button class="trail-tab-btn" id="trail-state-btn" onclick="setTrailMode('state')">STATE LINE</button>
+        </div>
+        <!-- Near Me -->
+        <div id="trail-near-panel">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">SEARCH RADIUS</div>
+          <div class="r3" style="gap:5px;margin-bottom:8px">
+            <button class="btn-outline" id="rad-025" onclick="setRadius(0.25)">0.25mi</button>
+            <button class="btn-outline" id="rad-05" onclick="setRadius(0.5)">0.5mi</button>
+            <button class="btn-outline" id="rad-1" onclick="setRadius(1)">1mi</button>
+            <button class="btn-outline active" id="rad-5" onclick="setRadius(5)">5mi</button>
+            <button class="btn-outline" id="rad-10" onclick="setRadius(10)">10mi</button>
+            <button class="btn-outline" id="rad-25" onclick="setRadius(25)">25mi</button>
+          </div>
+          <button class="btn-g" onclick="findNearbyBars()">📍 FIND BARS NEAR ME</button>
+        </div>
+        <!-- A to B -->
+        <div id="trail-ab-panel" style="display:none">
+          <input class="inp" id="trail-from" placeholder="Point A (city or address)" style="margin-bottom:7px"/>
+          <input class="inp" id="trail-to" placeholder="Point B (city or address)" style="margin-bottom:7px"/>
+          <select class="inp" id="trail-stops" style="margin-bottom:7px">
+            <option value="3">3 stops</option>
+            <option value="5" selected>5 stops</option>
+            <option value="10">10 stops</option>
+            <option value="99">All bars</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <input type="checkbox" id="trail-avoid-highway" style="width:16px;height:16px"/>
+            <label for="trail-avoid-highway" style="font-size:10px;color:var(--mut);letter-spacing:1px">AVOID INTERSTATES — back roads only</label>
+          </div>
+          <button class="btn-g" onclick="planRoute()">🍺 FIND BARS ON THIS ROUTE</button>
+        </div>
+        <!-- State Line -->
+        <div id="trail-state-panel" style="display:none">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">QUICK ROUTES</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">
+            <button onclick="setStateRoute('Indiana','Illinois','I-74')" class="btn-outline" style="text-align:left;padding:7px 10px">🛣️ Indiana → Illinois (I-74)</button>
+            <button onclick="setStateRoute('Indiana','Illinois','I-65')" class="btn-outline" style="text-align:left;padding:7px 10px">🛣️ Indiana → Illinois (I-65)</button>
+            <button onclick="setStateRoute('Indiana','Ohio','I-70')" class="btn-outline" style="text-align:left;padding:7px 10px">🛣️ Indiana → Ohio (I-70)</button>
+            <button onclick="setStateRoute('Indiana','Kentucky','I-65')" class="btn-outline" style="text-align:left;padding:7px 10px">🛣️ Indiana → Kentucky (I-65)</button>
+            <button onclick="setStateRoute('Illinois','Missouri','I-70')" class="btn-outline" style="text-align:left;padding:7px 10px">🛣️ Illinois → Missouri (I-70)</button>
+          </div>
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">OR CUSTOM</div>
+          <div class="r2" style="gap:7px;margin-bottom:7px">
+            <input class="inp" id="state-from" placeholder="From state"/>
+            <input class="inp" id="state-to" placeholder="To state"/>
+          </div>
+          <input class="inp" id="state-highway" placeholder="Highway (e.g. I-65, Route 66)" style="margin-bottom:7px"/>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <input type="checkbox" id="state-avoid-highway" style="width:16px;height:16px"/>
+            <label for="state-avoid-highway" style="font-size:10px;color:var(--mut);letter-spacing:1px">AVOID INTERSTATES — back roads only</label>
+          </div>
+          <button class="btn-g" onclick="planStateRoute()">🍺 FIND BARS ON THIS ROUTE</button>
+        </div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px" id="trail-result-label">BARS WILL APPEAR HERE</div>
+        <div id="trail-results" class="scroll-inner"><div style="color:var(--mut);font-size:11px;text-align:center;padding:10px 0">🍺 Search for bars above</div></div>
+      </div>
+    </div>
+
+    <!-- STATS TAB -->
+    <div id="tab-stats" class="tab">
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;gap:5px;margin-bottom:8px">
+          <button class="btn-outline active" id="rep-week" onclick="setReport('week')">WEEK</button>
+          <button class="btn-outline" id="rep-month" onclick="setReport('month')">MONTH</button>
+          <button class="btn-outline" id="rep-year" onclick="setReport('year')">YEAR</button>
+        </div>
+        <div id="report-content">
+          <div style="color:var(--mut);font-size:11px">Loading...</div>
+        </div>
+      </div>
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">HEATMAP</div>
+        <div id="heatmap"></div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">🏆 ACHIEVEMENTS</div>
+        <div id="achievements" class="scroll-inner"></div>
+      </div>
+    </div>
+
+    <!-- MERCH TAB -->
+    <div id="tab-merch" class="tab">
+      <div style="text-align:center;padding:8px 0 4px;flex-shrink:0">
+        <div style="font-size:20px;font-weight:800;letter-spacing:2px">KYLE'S A DICK</div>
+        <div style="font-size:9px;color:var(--g);letter-spacing:3px;margin-top:2px">PARTY HARD • ROCK ON</div>
+      </div>
+      <div class="card" style="flex-shrink:0;text-align:center;border-color:#4ade8044">
+        <div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">YOUR RANK UNLOCKS</div>
+        <div style="font-size:14px;font-weight:800;color:var(--g)" id="merch-rank-text">Keep logging to unlock rank rewards</div>
+      </div>
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:8px">🔥 FEATURED</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div onclick="window.open('https://kylesadick.com','_blank')" style="display:flex;align-items:center;gap:10px;padding:9px;background:var(--card2);border-radius:10px;cursor:pointer;border:1px solid var(--bdr)">
+            <div style="font-size:28px">👕</div>
+            <div style="flex:1"><div style="font-weight:800;font-size:12px">Kelly Green Party Shirt</div><div style="font-size:10px;color:var(--mut);margin-top:1px">"I Played Kings With Kyle's A Dick"</div></div>
+            <div style="color:var(--g);font-size:11px;font-weight:700">SHOP →</div>
+          </div>
+          <div onclick="window.open('https://kylesadick.com','_blank')" style="display:flex;align-items:center;gap:10px;padding:9px;background:var(--card2);border-radius:10px;cursor:pointer;border:1px solid var(--bdr)">
+            <div style="font-size:28px">🧊</div>
+            <div style="flex:1"><div style="font-weight:800;font-size:12px">KAD Double Stack Koozie</div><div style="font-size:10px;color:var(--mut);margin-top:1px">With shotgun hole + timer</div></div>
+            <div style="color:var(--g);font-size:11px;font-weight:700">SHOP →</div>
+          </div>
+          <div onclick="window.open('https://kylesadick.com','_blank')" style="display:flex;align-items:center;gap:10px;padding:9px;background:var(--card2);border-radius:10px;cursor:pointer;border:1px solid var(--bdr)">
+            <div style="font-size:28px">🃏</div>
+            <div style="flex:1"><div style="font-weight:800;font-size:12px">KAD Kings Card Deck</div><div style="font-size:10px;color:var(--mut);margin-top:1px">Custom KAD edition</div></div>
+            <div style="color:var(--g);font-size:11px;font-weight:700">SHOP →</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">🏆 MILESTONES</div>
+        <div id="merch-milestones" class="scroll-inner"></div>
+      </div>
+    </div>
+
+    <!-- MORE TAB -->
+    <div id="tab-more" class="tab">
+      <div class="card" style="flex-shrink:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:8px">⚙️ SETTINGS</div>
+        <div class="r2" style="gap:7px;margin-bottom:7px">
+          <div>
+            <div style="font-size:9px;color:var(--mut);margin-bottom:4px;letter-spacing:1px">WEIGHT (lbs)</div>
+            <input class="inp" id="user-weight" type="number" placeholder="180" style="text-align:center;font-size:16px;font-weight:800" oninput="saveWeight()"/>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--mut);margin-bottom:4px;letter-spacing:1px">YEARLY GOAL</div>
+            <input class="inp" id="user-goal" type="number" placeholder="200" style="text-align:center;font-size:16px;font-weight:800" oninput="saveGoal()"/>
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--mut);margin-bottom:4px;letter-spacing:1px">DISPLAY NAME</div>
+        <input class="inp" id="my-name" placeholder="Your display name..." oninput="saveDisplayName()" style="margin-bottom:7px"/>
+        <button onclick="resetAll()" style="width:100%;padding:9px;background:transparent;border:1px solid var(--red);border-radius:8px;color:var(--red);font-weight:700;font-size:11px;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:1px">RESET ALL DATA</button>
+      </div>
+      <div class="card" style="flex-shrink:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:1px">🏆 LEADERBOARD (THIS WEEK)</div>
+          <button onclick="renderLeaderboard()" class="btn-outline" style="font-size:9px;padding:3px 8px">REFRESH</button>
+        </div>
+        <div id="leaderboard"><div style="color:var(--mut);font-size:11px;text-align:center;padding:6px">Tap refresh to load</div></div>
+      </div>
+      <div class="card" style="flex:1;overflow:hidden;min-height:0">
+        <div style="font-size:9px;color:var(--mut);letter-spacing:1px;margin-bottom:6px">📍 FAVORITE SPOTS</div>
+        <div id="spots-list" class="scroll-inner"></div>
+      </div>
+    </div>
+
+  </div><!-- end #content -->
+
+  <div id="nav">
+    <button class="nav-btn active" onclick="switchTab('home')">🏠</button>
+    <button class="nav-btn" onclick="switchTab('session')">🍻</button>
+    <button class="nav-btn" onclick="switchTab('shotgun')">💨</button>
+    <button class="nav-btn" onclick="switchTab('concert')">🎸</button>
+    <button class="nav-btn" onclick="switchTab('trail')">🗺️</button>
+    <button class="nav-btn" onclick="switchTab('stats')">📊</button>
+    <button class="nav-btn" onclick="switchTab('merch')">👕</button>
+    <button class="nav-btn" onclick="switchTab('more')">•••</button>
+  </div>
+</div>
+
+<!-- QUICK LOG OVERLAY -->
+<div id="overlay" onclick="if(event.target===this)closeOverlay()">
+  <div class="sheet">
+    <div style="font-size:14px;font-weight:700;color:var(--g);letter-spacing:2px;margin-bottom:10px">QUICK LOG 🍺</div>
+    <div style="font-size:9px;color:var(--mut);margin-bottom:5px;letter-spacing:1px">SELECT BEER</div>
+    <div id="qa-beers" class="pill-row" style="margin-bottom:10px"></div>
+    <div class="r3" style="margin-bottom:9px">
+      <button class="btn-outline active" id="qa-qty1" onclick="setQaQty(1)">+1</button>
+      <button class="btn-outline" id="qa-qty2" onclick="setQaQty(2)">+2</button>
+      <button class="btn-outline" id="qa-qty3" onclick="setQaQty(3)">+3</button>
+    </div>
+    <div class="r2" style="gap:7px;margin-bottom:9px">
+      <input class="inp" id="qa-price" placeholder="$ Price" type="number"/>
+      <input class="inp" id="qa-loc" placeholder="📍 Location"/>
+    </div>
+    <button class="btn-g" onclick="logQuick()">LOG IT</button>
+  </div>
+</div>
+
+<!-- SHARE CARD -->
+<div id="share-card" onclick="if(event.target===this)hideShareCard()">
+  <div class="stats-card">
+    <button onclick="hideShareCard()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer">✕</button>
+    <div style="font-size:9px;letter-spacing:3px;color:var(--g);margin-bottom:2px">KYLE'S A DICK</div>
+    <div style="font-size:18px;font-weight:800">YEAR ON TAP 🍺</div>
+    <div style="font-size:56px;font-weight:800;color:var(--g);line-height:1;margin:10px 0 2px" id="card-total">0</div>
+    <div style="font-size:9px;letter-spacing:3px;color:var(--mut);margin-bottom:12px">BEERS THIS YEAR</div>
+    <div class="r3" style="margin-bottom:10px;gap:7px">
+      <div class="card"><div style="font-size:16px;font-weight:800;color:var(--g)" id="card-today">0</div><div class="s-lab">Today</div></div>
+      <div class="card"><div style="font-size:16px;font-weight:800;color:var(--ylw)" id="card-streak">0d</div><div class="s-lab">Streak</div></div>
+      <div class="card"><div style="font-size:16px;font-weight:800" id="card-spent">$0</div><div class="s-lab">Spent</div></div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="font-size:22px" id="card-rank-icon">🌱</span>
+      <div style="text-align:left">
+        <div style="font-size:13px;font-weight:800" id="card-rank-name">Rookie</div>
+        <div style="font-size:9px;color:var(--mut)">KAD Rank</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:var(--mut);margin-top:10px;letter-spacing:1px">kylesadick.com</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const BEER_DB = [
+  {name:'Busch',         style:'American Lager', abv:4.3, price:1.75, cals:114,  carbs:6.9},
+  {name:'Busch Light',   style:'Light Lager',    abv:4.1, price:1.75, cals:95,   carbs:3.2},
+  {name:'Bud Light',     style:'Light Lager',    abv:4.2, price:2.50, cals:110,  carbs:6.6},
+  {name:'Budweiser',     style:'American Lager', abv:5.0, price:3.00, cals:145,  carbs:10.6},
+  {name:'Miller Lite',   style:'Light Lager',    abv:4.2, price:2.50, cals:96,   carbs:3.2},
+  {name:'Coors Light',   style:'Light Lager',    abv:4.2, price:2.50, cals:102,  carbs:5.0},
+  {name:'PBR',           style:'American Lager', abv:4.7, price:2.00, cals:144,  carbs:12.8},
+  {name:'Yuengling',     style:'Amber Lager',    abv:4.4, price:3.00, cals:128,  carbs:11.0},
+  {name:'Blue Moon',     style:'Wheat Ale',      abv:5.4, price:4.00, cals:171,  carbs:13.0},
+  {name:'Corona',        style:'Mexican Lager',  abv:4.6, price:3.50, cals:148,  carbs:13.9},
+  {name:'Modelo',        style:'Mexican Lager',  abv:4.4, price:3.50, cals:143,  carbs:13.6},
+  {name:'Heineken',      style:'Euro Lager',     abv:5.0, price:4.00, cals:142,  carbs:11.4},
+  {name:'Guinness',      style:'Dry Stout',      abv:4.2, price:5.00, cals:125,  carbs:9.6},
+  {name:'Sam Adams',     style:'Vienna Lager',   abv:4.9, price:4.50, cals:180,  carbs:18.0},
+  {name:'Dogfish IPA',   style:'IPA',            abv:6.0, price:5.50, cals:206,  carbs:15.0},
+  {name:'White Claw',    style:'Hard Seltzer',   abv:5.0, price:3.00, cals:100,  carbs:2.0},
+  {name:'High Noon',     style:'Hard Seltzer',   abv:4.5, price:3.50, cals:100,  carbs:3.0},
+  {name:'Michelob Ultra',style:'Light Lager',    abv:4.2, price:3.00, cals:95,   carbs:2.6},
+  {name:'Natty Light',   style:'Light Lager',    abv:4.2, price:1.50, cals:95,   carbs:3.2},
+  {name:'Rolling Rock',  style:'Extra Pale',     abv:4.5, price:2.50, cals:132,  carbs:10.0},
+];
+
+const RANKS = [
+  {name:'Rookie',      icon:'🌱', min:0},
+  {name:'Regular',     icon:'🍺', min:10},
+  {name:'Veteran',     icon:'⚡', min:30},
+  {name:'Legend',      icon:'💀', min:75},
+  {name:'Kyle',        icon:'👑', min:150},
+];
+
+const MERCH_MILESTONES = [
+  {beers:1,   icon:'🌱', reward:'Welcome to KAD',       desc:'You started. Kyle acknowledges your existence.'},
+  {beers:6,   icon:'🍺', reward:'Six Pack Achievement', desc:'Six pack down. You belong here.'},
+  {beers:12,  icon:'🎉', reward:'One Case Badge',       desc:'A full case. Respect.'},
+  {beers:24,  icon:'📦', reward:'Veteran Unlocked',     desc:"You're not messing around anymore."},
+  {beers:50,  icon:'⚡', reward:'KAD Koozie Eligible',  desc:'DM @kylesadick on Instagram to claim.'},
+  {beers:100, icon:'💀', reward:'Legend Status',        desc:'Century club. Hall of fame tier.'},
+  {beers:200, icon:'👑', reward:'You Are Kyle',         desc:'The highest honor. There is nothing beyond this.'},
+];
+
+const ROASTS = [
+  "Kyle's A Dick and so is your liver 🤘",
+  "Impressive. Still a dick tho. 🍺",
+  "Your doctor would cry. Kyle's proud.",
+  "Legend status loading... 🔥",
+  "Someone call an Uber.",
+  "Getting dangerous in here. 💀",
+  "Your liver filed a restraining order.",
+  "Kyle approves. Barely.",
+];
+
+const ACHIEVEMENTS = [
+  {id:'first',    icon:'🌱', label:'First Beer',        check:s=>s.total>=1},
+  {id:'sixpack',  icon:'🥤', label:'Six Pack',          check:s=>s.total>=6},
+  {id:'case',     icon:'📦', label:'Full Case',         check:s=>s.total>=24},
+  {id:'streak3',  icon:'🔥', label:'3 Day Streak',      check:s=>s.streak>=3},
+  {id:'streak7',  icon:'🔥', label:'7 Day Streak',      check:s=>s.streak>=7},
+  {id:'century',  icon:'💯', label:'Century Club',      check:s=>s.total>=100},
+  {id:'shotgun',  icon:'💨', label:'First Shotgun',     check:_=>shotguns.length>0},
+  {id:'trail',    icon:'🗺️', label:'Trail Blazer',      check:_=>logs.some(l=>l.loc&&l.loc.length>0)},
+];
+
+const SB_URL = 'https://rmohclmjhuhnfrqquefn.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtb2hjbG1qaHVobmZycXF1ZWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE4MzYsImV4cCI6MjA5MjY4NzgzNn0.79-vc0kCHAidX1DXWbgAoLOY_r03xXLucVD6QguToEg';
+const GAPI_KEY = 'AIzaSyCvtTh5dk8XJuAXC634JH8KHhXO-CNFWOU';
+
+// ============================================================
+// STATE
+// ============================================================
+let logs = JSON.parse(localStorage.getItem('kad_logs')||'[]');
+let shotguns = JSON.parse(localStorage.getItem('kad_shotguns')||'[]');
+let goal = parseInt(localStorage.getItem('kad_goal')||'200');
+let sessionStart = localStorage.getItem('kad_sess') ? parseInt(localStorage.getItem('kad_sess')) : null;
+let sessTimer = null;
+let concertData = JSON.parse(localStorage.getItem('kad_concert')||'{"active":false,"name":"","days":1,"log":{}}');
+let currentReport = 'week';
+let trailRadius = 5;
+let trailMode = 'near';
+let qaBeer = BEER_DB[1]; // Busch Light default
+let qaQty = 1;
+let toastTimer = null;
+let sgState = 'idle';
+let sgMode = 'solo';
+let sgStartTime = null;
+let sgElapsed = 0;
+let sgRaf = null;
+let sgFalseStartPending = false;
+let relayLegs = [];
+let relayTimes = [];
+let relayCurrentLeg = 0;
+let concertDay = 1;
+
+// ============================================================
+// UTILS
+// ============================================================
+function save() { localStorage.setItem('kad_logs', JSON.stringify(logs)); }
+function saveShotguns() { localStorage.setItem('kad_shotguns', JSON.stringify(shotguns)); }
+
+function nowStr() { return new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function timeStr() { return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+
+function getRank(total) { return [...RANKS].reverse().find(r=>total>=r.min)||RANKS[0]; }
+
+function getPlayerId() {
+  let id = localStorage.getItem('kad_player_id');
+  if(!id){id='p_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36);localStorage.setItem('kad_player_id',id);}
+  return id;
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.style.display='none', 2200);
+}
+
+function showRoast(total) {
+  if(total>0 && total%5===0) showToast(ROASTS[Math.floor(Math.random()*ROASTS.length)]);
+}
+
+function calcStreak() {
+  const days = [...new Set(logs.map(l=>new Date(l.ts).toDateString()))];
+  if(!days.length) return 0;
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  for(let i=0;i<365;i++){
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    if(days.includes(d.toDateString())) streak++;
+    else if(i>0) break;
+  }
+  return streak;
+}
+
+function getStats() {
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const weekAgo = Date.now()-7*864e5;
+  const monthStart = new Date(now.getFullYear(),now.getMonth(),1).getTime();
+  const yearStart = new Date(now.getFullYear(),0,1).getTime();
+  const yearLogs = logs.filter(l=>l.ts>=yearStart);
+  const total = yearLogs.reduce((a,l)=>a+l.qty,0);
+  const todayN = logs.filter(l=>new Date(l.ts).toDateString()===todayStr).reduce((a,l)=>a+l.qty,0);
+  const weekN = logs.filter(l=>l.ts>=weekAgo).reduce((a,l)=>a+l.qty,0);
+  const monthN = logs.filter(l=>l.ts>=monthStart).reduce((a,l)=>a+l.qty,0);
+  const spent = yearLogs.reduce((a,l)=>a+(l.price*l.qty),0);
+  const abvs = yearLogs.filter(l=>l.abv>0);
+  const avgAbv = abvs.length ? (abvs.reduce((a,l)=>a+l.abv*l.qty,0)/abvs.reduce((a,l)=>a+l.qty,0)).toFixed(1) : '0.0';
+  const streak = calcStreak();
+  const totalCals = yearLogs.reduce((a,l)=>a+(l.cals||l.qty*140),0);
+  const totalCarbs = yearLogs.reduce((a,l)=>a+(l.carbs||l.qty*10),0);
+  return {total,todayN,weekN,monthN,spent,avgAbv,streak,totalCals,totalCarbs};
+}
+
+// ============================================================
+// LOGGING
+// ============================================================
+function addLog(beer, qty, price, loc) {
+  const entry = {
+    id:Date.now(), ts:Date.now(),
+    name:beer.name, style:beer.style, abv:beer.abv,
+    price:parseFloat(price)||beer.price,
+    cals:(beer.cals||140)*qty,
+    carbs:(beer.carbs||10)*qty,
+    qty, date:nowStr(), time:timeStr(), loc:loc||''
+  };
+  logs.unshift(entry);
+  save();
+  showToast(`+${qty} ${beer.name} 🍺`);
+  showRoast(getStats().total);
+  updateAll();
+  pushLeaderboard().catch(()=>{});
+  updateBadge(getStats().todayN);
+}
+
+function undoLast() {
+  if(!logs.length){showToast('Nothing to undo');return;}
+  logs.shift(); save(); updateAll(); showToast('Last log removed');
+}
+
+function resetAll() {
+  if(!confirm('Reset ALL data? This cannot be undone.')) return;
+  logs=[]; shotguns=[]; concertData={active:false,name:'',days:1,log:{}};
+  save(); saveShotguns();
+  localStorage.setItem('kad_concert',JSON.stringify(concertData));
+  updateAll(); showToast('Data reset');
+}
+
+// ============================================================
+// UPDATE ALL
+// ============================================================
+function updateAll() {
+  const s = getStats();
+  const rank = getRank(s.total);
+
+  // Home
+  document.getElementById('total-num').textContent = s.total;
+  document.getElementById('today-num').textContent = s.todayN;
+  document.getElementById('week-num').textContent = s.weekN;
+  document.getElementById('month-num').textContent = s.monthN;
+  document.getElementById('spent-num').textContent = '$'+s.spent.toFixed(2);
+  document.getElementById('abv-num').textContent = s.avgAbv+'%';
+  document.getElementById('cals-num').textContent = s.totalCals.toLocaleString();
+  document.getElementById('carbs-num').textContent = s.totalCarbs.toFixed(1)+'g';
+
+  const pct = Math.min(100,Math.round(s.total/goal*100));
+  document.getElementById('goal-fill').style.width = pct+'%';
+  document.getElementById('goal-pct').textContent = pct+'%';
+  document.getElementById('goal-label').textContent = s.total+'/'+goal;
+  document.getElementById('goal-left').textContent = Math.max(0,goal-s.total)+' left';
+
+  // Rank badges
+  ['rank-icon','rank-icon2','card-rank-icon'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.textContent=rank.icon;
+  });
+  ['rank-name','rank-name2','card-rank-name'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.textContent=rank.name;
+  });
+
+  // Share card
+  const cardTotal = document.getElementById('card-total');
+  if(cardTotal) cardTotal.textContent = s.total;
+  const cardToday = document.getElementById('card-today');
+  if(cardToday) cardToday.textContent = s.todayN;
+  const cardStreak = document.getElementById('card-streak');
+  if(cardStreak) cardStreak.textContent = s.streak+'d';
+  const cardSpent = document.getElementById('card-spent');
+  if(cardSpent) cardSpent.textContent = '$'+Math.round(s.spent);
+
+  // Recent log
+  const rl = document.getElementById('recent-log');
+  if(rl){
+    if(!logs.length){rl.innerHTML='<div style="color:var(--mut);font-size:11px">Nothing yet. Get drinkin\'.</div>';}
+    else{
+      rl.innerHTML = logs.slice(0,15).map(l=>`
+        <div class="log-row">
+          <div style="flex:1">
+            <div class="log-name">${l.qty>1?l.qty+'x ':''}${l.name}</div>
+            <div class="log-meta">${l.time} · ${l.loc?'📍'+l.loc+' · ':''}<span style="color:var(--ylw)">🔥${l.cals||0}</span> cal</div>
+          </div>
+          <div class="log-abv">${l.abv}%</div>
+        </div>`).join('');
+    }
+  }
+
+  // Session log
+  updateSessionDisplay(s);
+
+  // Spots
+  try{renderSpots();}catch(e){}
+  // Achievements
+  try{renderAchievements(s);}catch(e){}
+  // Stats
+  try{renderReportStats();}catch(e){}
+  // Heatmap
+  try{renderHeatmap();}catch(e){}
+}
+
+// ============================================================
+// BAC + SESSION
+// ============================================================
+function calcBAC() {
+  if(!sessionStart) return 0;
+  const hrs = (Date.now()-sessionStart)/3600000;
+  const drinks = logs.filter(l=>l.ts>=sessionStart).reduce((a,l)=>a+l.qty,0);
+  const weight = parseInt(localStorage.getItem('kad_weight')||'180');
+  return Math.max(0, Math.round(((drinks*14*5.14)/(weight*0.73)-0.015*hrs)*1000)/1000);
+}
+
+function toggleSession() {
+  const btn = document.getElementById('sess-btn');
+  if(sessionStart){
+    sessionStart=null; clearInterval(sessTimer);
+    localStorage.removeItem('kad_sess');
+    btn.textContent='START SESSION';
+    document.getElementById('sess-status').textContent='Session ended';
+  } else {
+    sessionStart=Date.now();
+    localStorage.setItem('kad_sess',sessionStart);
+    btn.textContent='END SESSION';
+    sessTimer=setInterval(updateTimer,1000);
+    updateTimer();
+  }
+}
+
+function updateTimer() {
+  if(!sessionStart) return;
+  const s = Math.floor((Date.now()-sessionStart)/1000);
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  document.getElementById('sess-timer').textContent =
+    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  const bac = calcBAC();
+  document.getElementById('bac-num').textContent = 'BAC: '+bac.toFixed(3);
+  const pct = Math.min(100,(bac/0.2)*100);
+  const fill = document.getElementById('dom-fill');
+  if(fill) fill.style.width=pct+'%';
+  const color = bac<0.05?'var(--g)':bac<0.08?'var(--ylw)':'var(--red)';
+  if(fill) fill.style.background=color;
+  const label = bac<0.02?'Sober 😇':bac<0.05?'Buzzed 😄':bac<0.08?'Tipsy 😏':bac<0.12?'Drunk 🥴':'WRECKED 💀';
+  document.getElementById('dom-label').textContent=label;
+}
+
+function updateSessionDisplay(s) {
+  if(!sessionStart) return;
+  const sessBeers = logs.filter(l=>l.ts>=sessionStart).reduce((a,l)=>a+l.qty,0);
+  const hrs = (Date.now()-sessionStart)/3600000;
+  const pace = hrs>0 ? (sessBeers/hrs).toFixed(1)+'/hr' : '0/hr';
+  const el1 = document.getElementById('sess-beers');
+  const el2 = document.getElementById('sess-pace');
+  if(el1) el1.textContent=sessBeers;
+  if(el2) el2.textContent=pace;
+  const sl = document.getElementById('sess-log');
+  if(sl){
+    const sessLogs = logs.filter(l=>l.ts>=sessionStart);
+    sl.innerHTML = sessLogs.length
+      ? sessLogs.map(l=>`<div style="font-size:11px;padding:3px 0;border-bottom:1px solid var(--bdr)">${l.qty}x ${l.name} — ${l.time}</div>`).join('')
+      : '<div style="color:var(--mut);font-size:11px">No beers logged this session</div>';
+  }
+}
+
+// ============================================================
+// QUICK ADD
+// ============================================================
+function openQuickAdd() {
+  qaBeer = BEER_DB[1]; qaQty = 1;
+  renderQABeers();
+  document.getElementById('qa-price').value = '';
+  document.getElementById('qa-loc').value = '';
+  setQaQty(1);
+  document.getElementById('overlay').classList.add('show');
+}
+function closeOverlay() { document.getElementById('overlay').classList.remove('show'); }
+
+function renderQABeers() {
+  document.getElementById('qa-beers').innerHTML = BEER_DB.map(b=>`
+    <div class="pill ${qaBeer&&qaBeer.name===b.name?'active':''}" onclick="setQaBeer('${b.name}')">${b.name}</div>
+  `).join('');
+}
+
+function setQaBeer(name) { qaBeer=BEER_DB.find(b=>b.name===name); renderQABeers(); }
+
+function setQaQty(n) {
+  qaQty=n;
+  [1,2,3].forEach(i=>{
+    const el=document.getElementById('qa-qty'+i);
+    if(el){el.className='btn-outline'+(i===n?' active':'');}
+  });
+}
+
+function logQuick() {
+  if(!qaBeer){showToast('Select a beer first');return;}
+  const price = document.getElementById('qa-price').value;
+  const loc = document.getElementById('qa-loc').value;
+  addLog(qaBeer, qaQty, price||qaBeer.price, loc);
+  closeOverlay();
+}
+
+// ============================================================
+// SHARE CARD
+// ============================================================
+function showShareCard() { updateAll(); document.getElementById('share-card').classList.add('show'); }
+function hideShareCard() { document.getElementById('share-card').classList.remove('show'); }
+
+// ============================================================
+// SHOTGUN TIMER
+// ============================================================
+function setSgMode(mode) {
+  sgMode = mode;
+  ['solo','tallboy','relay'].forEach(m=>{
+    const el=document.getElementById('sgm-'+m);
+    if(el){el.className='sg-mode-btn'+(m===mode?' active':'');}
+  });
+  const rp = document.getElementById('sg-relay-panel');
+  if(rp) rp.style.display=mode==='relay'?'block':'none';
+  sgReset();
+  renderShotgunStats();
+}
+
+function sgAction() {
+  if(sgState==='idle') sgBeginCountdown();
+  else if(sgState==='countdown'){showToast('FALSE START! ⛔');sgReset();}
+  else if(sgState==='running') sgStop();
+}
+
+function sgBeginCountdown() {
+  sgState='countdown'; sgFalseStartPending=true;
+  const btn=document.getElementById('sg-start-btn');
+  if(btn) btn.textContent='⛔ TAP = FALSE START';
+  const display=document.getElementById('sg-display');
+  const sub=document.getElementById('sg-sub');
+  let count=3;
+  const tick=()=>{
+    if(display) display.textContent=count>0?count:'GO!';
+    if(display) display.style.color=count>0?'var(--ylw)':'var(--g)';
+    if(sub) sub.textContent=count>0?'Get ready...':'SHOTGUN!';
+    if(count===0){setTimeout(sgStart,100);}
+    count--;
+  };
+  tick();
+  const iv=setInterval(()=>{
+    if(count<0){clearInterval(iv);return;}
+    tick();
+  },1000);
+}
+
+function sgStart() {
+  if(sgState!=='countdown') return;
+  sgState='running'; sgStartTime=performance.now(); sgElapsed=0;
+  sgFalseStartPending=false;
+  const btn=document.getElementById('sg-start-btn');
+  if(btn) btn.textContent='⏹ STOP';
+  const sub=document.getElementById('sg-sub');
+  if(sub) sub.textContent='DRINKING...';
+  sgRafLoop();
+}
+
+function sgRafLoop() {
+  if(sgState!=='running') return;
+  sgElapsed = performance.now()-sgStartTime;
+  const display=document.getElementById('sg-display');
+  if(display) display.textContent=fmtTime(sgElapsed);
+  sgRaf=requestAnimationFrame(sgRafLoop);
+}
+
+function sgStop() {
+  if(sgState!=='running') return;
+  cancelAnimationFrame(sgRaf);
+  const elapsed=performance.now()-sgStartTime;
+  sgState='idle';
+  const pr=getSgPR(sgMode);
+  const isPR=!pr||elapsed<pr;
+  shotguns.unshift({id:Date.now(),ms:elapsed,mode:sgMode,date:nowStr(),time:timeStr()});
+  saveShotguns();
+  addLog(BEER_DB[1],1,BEER_DB[1].price,'');
+  if(isPR) pushShotgunTime(elapsed,sgMode).catch(()=>{});
+  const msg=isPR?`NEW PR! ${fmtTime(elapsed)} 🏆`:`${fmtTime(elapsed)} — PR: ${fmtTime(pr)}`;
+  showToast(msg);
+  const btn=document.getElementById('sg-start-btn');
+  if(btn) btn.textContent='💨 START SHOTGUN';
+  const sub=document.getElementById('sg-sub');
+  if(sub) sub.textContent=isPR?'NEW PERSONAL RECORD! 🏆':'Good run!';
+  renderShotgunStats();
+}
+
+function sgReset() {
+  cancelAnimationFrame(sgRaf);
+  sgState='idle'; sgElapsed=0; sgStartTime=null;
+  const display=document.getElementById('sg-display');
+  if(display){display.textContent='0.000';display.style.color='var(--g)';}
+  const btn=document.getElementById('sg-start-btn');
+  if(btn) btn.textContent='💨 START SHOTGUN';
+  const sub=document.getElementById('sg-sub');
+  if(sub) sub.textContent='TAP TO START';
+}
+
+function getSgPR(mode) {
+  const times=shotguns.filter(s=>s.mode===mode);
+  return times.length ? Math.min(...times.map(s=>s.ms)) : null;
+}
+
+function fmtTime(ms) {
+  if(ms===undefined||ms===null) return '—';
+  return (ms/1000).toFixed(3)+'s';
+}
+
+function addRelayLeg() {
+  if(sgState==='running'){
+    relayTimes.push(performance.now()-sgStartTime);
+    relayCurrentLeg++;
+    showToast(`Leg ${relayCurrentLeg} done!`);
+    renderRelayLegs();
+  } else {showToast('Start timer first');}
+}
+
+function clearRelayLegs() {relayLegs=[];relayCurrentLeg=0;relayTimes=[];renderRelayLegs();}
+
+function renderRelayLegs() {
+  const el=document.getElementById('relay-legs-display');
+  if(!el) return;
+  el.innerHTML=relayTimes.map((t,i)=>`<div style="font-size:11px;color:var(--mut);padding:2px 0">Leg ${i+1}: ${fmtTime(t)}</div>`).join('')||'<div style="color:var(--mut);font-size:11px">No legs yet</div>';
+}
+
+function resetShotguns() {
+  if(!confirm('Reset ALL shotgun times?')) return;
+  shotguns=[]; saveShotguns(); renderShotgunStats(); showToast('Shotgun times reset');
+}
+
+function deleteShotgun(id) {
+  shotguns=shotguns.filter(s=>s.id!==id); saveShotguns(); renderShotgunStats();
+}
+
+function renderShotgunStats() {
+  const el=document.getElementById('sg-history');
+  if(!el) return;
+  const filtered=shotguns.filter(s=>s.mode===sgMode);
+  if(!filtered.length){el.innerHTML='<div style="color:var(--mut);font-size:11px">No times yet for '+sgMode+' mode</div>';return;}
+  const pr=getSgPR(sgMode);
+  el.innerHTML=filtered.map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:800;color:${s.ms===pr?'var(--ylw)':'var(--txt)'}">${fmtTime(s.ms)}${s.ms===pr?' 🏆':''}</div>
+        <div style="font-size:10px;color:var(--mut)">${s.date} ${s.time} · ${s.mode}</div>
+      </div>
+      <button onclick="deleteShotgun(${s.id})" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer">×</button>
+    </div>`).join('');
+}
+
+// ============================================================
+// CONCERT MODE
+// ============================================================
+function toggleConcert() {
+  if(concertData.active){
+    concertData.active=false;
+  } else {
+    const name=document.getElementById('c-name').value||'Event';
+    const days=parseInt(document.getElementById('c-days').value||'1');
+    concertData={active:true,name,days,log:{},currentDay:1};
+  }
+  localStorage.setItem('kad_concert',JSON.stringify(concertData));
+  renderConcertStats();
+}
+
+function concertLog(qty) {
+  const day=concertData.currentDay||1;
+  if(!concertData.log[day]) concertData.log[day]=0;
+  concertData.log[day]+=qty;
+  localStorage.setItem('kad_concert',JSON.stringify(concertData));
+  addLog(BEER_DB[1],qty,BEER_DB[1].price,concertData.name);
+  renderConcertStats();
+}
+
+function renderConcertStats() {
+  const ap=document.getElementById('c-active-panel');
+  if(!ap) return;
+  ap.style.display=concertData.active?'block':'none';
+  if(!concertData.active){
+    const el=document.getElementById('c-stats');
+    if(el) el.innerHTML='<div style="color:var(--mut);font-size:11px">Start an event above</div>';
+    return;
+  }
+  const en=document.getElementById('c-event-name');
+  if(en) en.textContent=concertData.name;
+  // Day buttons
+  const db=document.getElementById('c-day-btns');
+  if(db){
+    db.innerHTML=Array.from({length:concertData.days},(_,i)=>i+1).map(d=>`
+      <button onclick="concertData.currentDay=${d};renderConcertStats()" 
+        class="btn-outline${(concertData.currentDay||1)===d?' active':''}" style="font-size:11px">Day ${d}</button>
+    `).join('');
+  }
+  // Stats
+  const el=document.getElementById('c-stats');
+  if(!el) return;
+  const total=Object.values(concertData.log).reduce((a,v)=>a+v,0);
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="font-size:36px;font-weight:800;color:var(--g)">${total}</div>
+      <div style="font-size:9px;color:var(--mut);letter-spacing:1px">TOTAL BEERS</div>
+    </div>
+    ${Array.from({length:concertData.days},(_,i)=>i+1).map(d=>`
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)">
+        <span style="font-size:12px;font-weight:700">Day ${d}</span>
+        <span style="font-size:12px;color:var(--g);font-weight:800">${concertData.log[d]||0} 🍺</span>
+      </div>`).join('')}
+  `;
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function setReport(period) {
+  currentReport=period;
+  ['week','month','year'].forEach(p=>{
+    const el=document.getElementById('rep-'+p);
+    if(el){el.className='btn-outline'+(p===period?' active':'');}
+  });
+  renderReportStats();
+}
+
+const MONEY_ALTS = [
+  {threshold:10,label:'a 12-pack of Busch'},
+  {threshold:25,label:'a case of Busch Light'},
+  {threshold:50,label:'a decent dinner for 2'},
+  {threshold:80,label:'a tank of gas'},
+  {threshold:120,label:'a concert ticket'},
+  {threshold:200,label:'AirPods'},
+  {threshold:300,label:'a new GPU'},
+  {threshold:500,label:'a PS5'},
+  {threshold:800,label:'an iPhone'},
+  {threshold:1200,label:'a plane ticket'},
+];
+function getMoneyAlt(spent) {
+  const match=[...MONEY_ALTS].reverse().find(m=>spent>=m.threshold);
+  return match?`that's ${match.label}`:"keep drinkin'";
+}
+
+function renderReportStats() {
+  const el=document.getElementById('report-content');
+  if(!el) return;
+  const now=new Date();
+  let start;
+  if(currentReport==='week') start=Date.now()-7*864e5;
+  else if(currentReport==='month') start=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+  else start=new Date(now.getFullYear(),0,1).getTime();
+  const period=logs.filter(l=>l.ts>=start);
+  const beers=period.reduce((a,l)=>a+l.qty,0);
+  const spent=period.reduce((a,l)=>a+(l.price*l.qty),0);
+  const cals=period.reduce((a,l)=>a+(l.cals||l.qty*140),0);
+  const carbs=period.reduce((a,l)=>a+(l.carbs||l.qty*10),0);
+  const bigMacs=(cals/563).toFixed(1);
+  el.innerHTML=`
+    <div class="r2" style="gap:7px;margin-bottom:7px">
+      <div class="card card2"><div class="g-num">${beers}</div><div class="s-lab">BEERS</div></div>
+      <div class="card card2"><div class="g-num">$${spent.toFixed(2)}</div><div class="s-lab">SPENT</div></div>
+    </div>
+    <div class="r2" style="gap:7px;margin-bottom:7px">
+      <div class="card card2"><div class="g-num" style="color:var(--ylw)">${cals.toLocaleString()}</div><div class="s-lab">🔥 CALORIES</div></div>
+      <div class="card card2"><div class="g-num" style="color:var(--ylw)">${carbs.toFixed(1)}g</div><div class="s-lab">🍞 CARBS</div></div>
+    </div>
+    <div class="card card2" style="font-size:11px;color:var(--mut);line-height:1.8">
+      🍔 ${bigMacs} Big Macs worth of calories<br/>
+      💰 ${getMoneyAlt(spent)}<br/>
+      📅 ${(beers/Math.max((currentReport==='week'?7:currentReport==='month'?30:365),1)).toFixed(1)} beers/day avg
+    </div>`;
+}
+
+function renderHeatmap() {
+  const el=document.getElementById('heatmap');
+  if(!el) return;
+  const dayMap={};
+  logs.forEach(l=>{
+    const d=new Date(l.ts).toDateString();
+    dayMap[d]=(dayMap[d]||0)+l.qty;
+  });
+  const max=Math.max(...Object.values(dayMap),1);
+  const cells=[];
+  for(let i=89;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i); d.setHours(0,0,0,0);
+    const v=dayMap[d.toDateString()]||0;
+    const lvl=v===0?0:Math.ceil((v/max)*5);
+    cells.push(`<div class="hm-cell${lvl>0?' d'+lvl:''}" title="${d.toDateString()}: ${v} beers"></div>`);
+  }
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:2px">${cells.join('')}</div>`;
+}
+
+function renderAchievements(s) {
+  const el=document.getElementById('achievements');
+  if(!el) return;
+  el.innerHTML=ACHIEVEMENTS.map(a=>{
+    const done=a.check(s);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr);opacity:${done?1:0.4}">
+      <div style="font-size:22px">${done?a.icon:'🔒'}</div>
+      <div style="font-size:12px;font-weight:700;color:${done?'var(--g)':'var(--txt)'}">${a.label}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// SPOTS
+// ============================================================
+function renderSpots() {
+  const el=document.getElementById('spots-list');
+  if(!el) return;
+  const spots={};
+  logs.filter(l=>l.loc).forEach(l=>{spots[l.loc]=(spots[l.loc]||0)+l.qty;});
+  const sorted=Object.entries(spots).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  el.innerHTML=sorted.length
+    ? sorted.map(([loc,count],i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr)">
+          <span style="font-size:13px;color:var(--mut)">${i+1}</span>
+          <div style="flex:1;font-size:12px;font-weight:700">📍 ${loc}</div>
+          <div style="font-size:12px;font-weight:800;color:var(--g)">${count} 🍺</div>
+        </div>`).join('')
+    : '<div style="color:var(--mut);font-size:11px">Log beers with locations to track spots</div>';
+}
+
+// ============================================================
+// MERCH
+// ============================================================
+function renderMerch() {
+  const s=getStats();
+  const next=MERCH_MILESTONES.find(m=>m.beers>s.total);
+  const bannerEl=document.getElementById('merch-rank-text');
+  if(bannerEl){
+    if(next) bannerEl.textContent=`${next.beers-s.total} more beers to reach ${next.reward}`;
+    else bannerEl.textContent='👑 MAX RANK — You ARE Kyle';
+  }
+  const el=document.getElementById('merch-milestones');
+  if(!el) return;
+  el.innerHTML=MERCH_MILESTONES.map(m=>{
+    const done=s.total>=m.beers;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);opacity:${done?1:0.4}">
+      <div style="font-size:22px">${done?m.icon:'🔒'}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:800;color:${done?'var(--g)':'var(--txt)'}">${m.reward}</div>
+        <div style="font-size:9px;color:var(--mut);margin-top:2px">${m.beers} beers required</div>
+        ${done?`<div style="font-size:10px;color:var(--ylw);margin-top:2px">${m.desc}</div>`:''}
+      </div>
+      ${done?`<button onclick="window.open('https://kylesadick.com','_blank')" style="background:var(--g);border:none;border-radius:8px;color:#000;font-size:10px;font-weight:800;padding:6px 10px;cursor:pointer;font-family:'Oswald',sans-serif;white-space:nowrap">SHOP</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// TRAIL OF BEERS
+// ============================================================
+function setTrailMode(mode) {
+  trailMode=mode;
+  ['near','ab','state'].forEach(m=>{
+    const btn=document.getElementById('trail-'+m+'-btn');
+    if(btn) btn.className='trail-tab-btn'+(m===mode?' active':'');
+    const panel=document.getElementById('trail-'+m+'-panel');
+    if(panel) panel.style.display=m===mode?'block':'none';
+  });
+  loadGoogleMaps().catch(()=>{});
+}
+
+function setRadius(r) {
+  trailRadius=r;
+  [0.25,0.5,1,5,10,25].forEach(v=>{
+    const el=document.getElementById('rad-'+String(v).replace('.',''));
+    if(el) el.className='btn-outline'+(v===r?' active':'');
+  });
+}
+
+function setStateRoute(from,to,highway) {
+  document.getElementById('state-from').value=from;
+  document.getElementById('state-to').value=to;
+  document.getElementById('state-highway').value=highway;
+}
+
+function showTrailLoading(msg) {
+  document.getElementById('trail-result-label').textContent='SEARCHING...';
+  document.getElementById('trail-results').innerHTML=`<div style="color:var(--mut);font-size:11px;text-align:center;padding:10px">${msg}</div>`;
+}
+
+function renderBarResults(bars,label) {
+  document.getElementById('trail-result-label').textContent=label||'RESULTS';
+  const el=document.getElementById('trail-results');
+  if(!bars||!bars.length){
+    el.innerHTML='<div style="color:var(--mut);font-size:11px;text-align:center;padding:10px">No bars found. Try a larger radius.</div>';
+    return;
+  }
+  el.innerHTML=bars.map((b,i)=>`
+    <div class="bar-card">
+      <div style="font-size:22px;font-weight:800;color:var(--mut)">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:800">${b.name}</div>
+        <div style="font-size:10px;color:var(--mut);margin-top:2px">${b.address||''}</div>
+        <div style="display:flex;gap:8px;margin-top:3px;font-size:10px;align-items:center">
+          ${b.rating?`<span style="color:var(--ylw)">★${b.rating}</span>`:''}
+          <span style="color:var(--mut)">${b.distance||''}</span>
+          ${b.open===true?'<span style="color:var(--g);font-weight:700">OPEN</span>':b.open===false?'<span style="color:var(--red);font-weight:700">CLOSED</span>':''}
+          ${b.price?`<span style="color:var(--mut)">${b.price}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <button onclick="logBeerHere('${b.name.replace(/'/g,"\\'")}')" style="background:var(--g);border:none;border-radius:8px;color:#000;font-size:11px;font-weight:800;padding:6px 8px;cursor:pointer;font-family:'Oswald',sans-serif">+1 🍺</button>
+        <button onclick="getDirections('${(b.address||b.name).replace(/'/g,"\\'")}')" style="background:var(--card);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-size:10px;font-weight:700;padding:5px 6px;cursor:pointer;font-family:'Oswald',sans-serif">MAPS</button>
+      </div>
+    </div>`).join('');
+}
+
+function logBeerHere(name) { addLog(BEER_DB[1],1,BEER_DB[1].price,name); showToast('+1 at '+name+' 🍺'); }
+function getDirections(address) { window.open('https://maps.google.com/?q='+encodeURIComponent(address),'_blank'); }
+
+function loadGoogleMaps() {
+  return new Promise((resolve,reject)=>{
+    if(window.google&&window.google.maps){resolve();return;}
+    const s=document.createElement('script');
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${GAPI_KEY}&libraries=places,geometry`;
+    s.onload=resolve; s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+function distMiCoord(lat1,lng1,lat2,lng2) {
+  const R=3958.8,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function distMi(lat1,lng1,lat2,lng2){return distMiCoord(lat1,lng1,lat2,lng2).toFixed(1)+' mi';}
+
+async function findNearbyBars() {
+  showTrailLoading('Getting your location...');
+  if(!navigator.geolocation){showToast('Location not supported');return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat,longitude:lng}=pos.coords;
+    showTrailLoading(`Finding bars within ${trailRadius}mi...`);
+    try {
+      await loadGoogleMaps();
+      const service=new google.maps.places.PlacesService(document.createElement('div'));
+      service.nearbySearch({
+        location:new google.maps.LatLng(lat,lng),
+        radius:Math.round(trailRadius*1609),
+        type:'bar',keyword:'bar tavern pub'
+      },(results,status)=>{
+        if(status!==google.maps.places.PlacesServiceStatus.OK||!results.length){renderBarResults([],'');return;}
+        const bars=results.slice(0,12).map(p=>({
+          name:p.name,
+          address:p.vicinity,
+          rating:p.rating,
+          open:p.opening_hours?p.opening_hours.open_now:undefined,
+          price:p.price_level?'$'.repeat(p.price_level):'',
+          distance:distMi(lat,lng,p.geometry.location.lat(),p.geometry.location.lng()),
+          _d:distMiCoord(lat,lng,p.geometry.location.lat(),p.geometry.location.lng())
+        })).sort((a,b)=>a._d-b._d);
+        renderBarResults(bars,`${bars.length} BARS WITHIN ${trailRadius}MI`);
+      });
+    } catch(e){
+      document.getElementById('trail-results').innerHTML='<div style="color:var(--red);font-size:11px;text-align:center;padding:10px">Search failed. Check connection.</div>';
+    }
+  },()=>{
+    document.getElementById('trail-results').innerHTML='<div style="color:var(--red);font-size:11px;text-align:center;padding:10px">Location access denied. Enable in Chrome site settings.</div>';
+  });
+}
+
+async function planRoute() {
+  const from=document.getElementById('trail-from').value;
+  const to=document.getElementById('trail-to').value;
+  const stops=document.getElementById('trail-stops').value;
+  const avoid=document.getElementById('trail-avoid-highway').checked;
+  if(!from||!to){showToast('Enter both Point A and Point B');return;}
+  showTrailLoading(`Finding bars: ${from} → ${to}...`);
+  try {
+    await loadGoogleMaps();
+    const geocoder=new google.maps.Geocoder();
+    const geocode=addr=>new Promise((res,rej)=>geocoder.geocode({address:addr},(r,s)=>s==='OK'?res(r[0].geometry.location):rej()));
+    const [fLoc,tLoc]=await Promise.all([geocode(from),geocode(to)]);
+    const midLat=(fLoc.lat()+tLoc.lat())/2, midLng=(fLoc.lng()+tLoc.lng())/2;
+    const routeDist=distMiCoord(fLoc.lat(),fLoc.lng(),tLoc.lat(),tLoc.lng());
+    const service=new google.maps.places.PlacesService(document.createElement('div'));
+    service.nearbySearch({
+      location:new google.maps.LatLng(midLat,midLng),
+      radius:Math.min(Math.round(routeDist*804),50000),
+      type:'bar',keyword:avoid?'dive bar tavern roadhouse':'bar tavern pub'
+    },(results,status)=>{
+      if(status!==google.maps.places.PlacesServiceStatus.OK||!results.length){renderBarResults([],'');return;}
+      const limit=parseInt(stops)===99?20:parseInt(stops);
+      const bars=results.slice(0,limit*2).map(p=>({
+        name:p.name,address:p.vicinity,rating:p.rating,
+        open:p.opening_hours?p.opening_hours.open_now:undefined,
+        price:p.price_level?'$'.repeat(p.price_level):'',
+        distance:distMi(midLat,midLng,p.geometry.location.lat(),p.geometry.location.lng())+' from mid',
+        _d:distMiCoord(midLat,midLng,p.geometry.location.lat(),p.geometry.location.lng())
+      })).sort((a,b)=>a._d-b._d).slice(0,limit);
+      renderBarResults(bars,`${bars.length} STOPS: ${from.toUpperCase()} → ${to.toUpperCase()}${avoid?' (BACK ROADS)':''}`);
+    });
+  } catch(e){
+    document.getElementById('trail-results').innerHTML='<div style="color:var(--red);font-size:11px;text-align:center;padding:10px">Search failed. Check addresses.</div>';
+  }
+}
+
+async function planStateRoute() {
+  const from=document.getElementById('state-from').value;
+  const to=document.getElementById('state-to').value;
+  const highway=document.getElementById('state-highway').value;
+  const avoid=document.getElementById('state-avoid-highway').checked;
+  if(!from||!to){showToast('Enter both states');return;}
+  showTrailLoading(`Finding bars: ${from} → ${to}...`);
+  try {
+    await loadGoogleMaps();
+    const geocoder=new google.maps.Geocoder();
+    const geocode=addr=>new Promise((res,rej)=>geocoder.geocode({address:addr+' USA'},(r,s)=>s==='OK'?res(r[0].geometry.location):rej()));
+    const [fLoc,tLoc]=await Promise.all([geocode(from),geocode(to)]);
+    const midLat=(fLoc.lat()+tLoc.lat())/2, midLng=(fLoc.lng()+tLoc.lng())/2;
+    const service=new google.maps.places.PlacesService(document.createElement('div'));
+    service.nearbySearch({
+      location:new google.maps.LatLng(midLat,midLng),
+      radius:80000,type:'bar',
+      keyword:avoid?'dive bar tavern roadhouse local':'bar tavern pub'
+    },(results,status)=>{
+      if(status!==google.maps.places.PlacesServiceStatus.OK||!results.length){renderBarResults([],'');return;}
+      const bars=results.slice(0,15).map(p=>{
+        const plat=p.geometry.location.lat(),plng=p.geometry.location.lng();
+        return {
+          name:p.name,address:p.vicinity,rating:p.rating,
+          open:p.opening_hours?p.opening_hours.open_now:undefined,
+          price:p.price_level?'$'.repeat(p.price_level):'',
+          distance:Math.round(distMiCoord(fLoc.lat(),fLoc.lng(),plat,plng))+' mi from start',
+          _d:distMiCoord(fLoc.lat(),fLoc.lng(),plat,plng)
+        };
+      }).sort((a,b)=>a._d-b._d);
+      const label=avoid?'(BACK ROADS)':highway?`(${highway})`:'';
+      renderBarResults(bars,`${bars.length} BARS: ${from.toUpperCase()} → ${to.toUpperCase()} ${label}`);
+    });
+  } catch(e){
+    document.getElementById('trail-results').innerHTML='<div style="color:var(--red);font-size:11px;text-align:center;padding:10px">Search failed. Check connection.</div>';
+  }
+}
+
+// ============================================================
+// SUPABASE
+// ============================================================
+async function sbFetch(path,method='GET',body=null) {
+  const opts={
+    method,
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'resolution=merge-duplicates,return=minimal':''}
+  };
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(SB_URL+path,opts);
+  if(method==='GET') return res.json();
+  return res;
+}
+
+async function pushLeaderboard() {
+  const s=getStats();
+  const rank=getRank(s.total);
+  const name=localStorage.getItem('kad_display_name')||'Anonymous';
+  await sbFetch('/rest/v1/kad_leaderboard','POST',{
+    player_id:getPlayerId(),player_name:name,
+    total_beers:s.total,week_beers:s.weekN,month_beers:s.monthN,
+    rank_name:rank.name,streak:s.streak,last_updated:new Date().toISOString()
+  });
+}
+
+async function renderLeaderboard() {
+  const el=document.getElementById('leaderboard');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--mut);font-size:10px;text-align:center;padding:8px">Loading...</div>';
+  await pushLeaderboard().catch(()=>{});
+  try {
+    const data=await sbFetch('/rest/v1/kad_leaderboard?select=*&order=week_beers.desc&limit=20');
+    if(!Array.isArray(data)||!data.length){
+      el.innerHTML='<div style="color:var(--mut);font-size:11px;text-align:center;padding:6px">No players yet. Share the app!</div>';
+      return;
+    }
+    const myId=getPlayerId();
+    const medals=['🥇','🥈','🥉'];
+    el.innerHTML=data.map((p,i)=>{
+      const isMe=p.player_id===myId;
+      const rank=RANKS.find(r=>r.name===p.rank_name)||RANKS[0];
+      return `<div class="lb-row" style="${isMe?'background:var(--gdk)22;':''}">
+        <span style="font-size:12px;width:20px;text-align:center">${medals[i]||i+1}</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:${isMe?800:600};color:${isMe?'var(--g)':'var(--txt)'}">${p.player_name}${isMe?' 👈':''}</div>
+          <div style="font-size:9px;color:var(--mut)">${rank.icon} ${p.rank_name} · ${p.streak}d streak</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-weight:800;color:${i===0?'var(--ylw)':'var(--txt)'}">${p.week_beers} 🍺</div>
+          <div style="font-size:9px;color:var(--mut)">this week</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    el.innerHTML='<div style="color:var(--mut);font-size:11px;text-align:center;padding:6px">Leaderboard offline</div>';
+  }
+}
+
+async function pushShotgunTime(ms,mode) {
+  const name=localStorage.getItem('kad_display_name')||'Anonymous';
+  await sbFetch('/rest/v1/kad_shotgun_board','POST',{
+    player_id:getPlayerId(),player_name:name,
+    time_ms:Math.round(ms),mode:mode||'solo',submitted_at:new Date().toISOString()
+  });
+}
+
+async function renderGlobalShotgunBoard() {
+  const el=document.getElementById('sg-global-board');
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--mut);font-size:10px;text-align:center;padding:6px">Loading...</div>';
+  try {
+    const data=await sbFetch(`/rest/v1/kad_shotgun_board?select=player_name,time_ms,player_id&mode=eq.${sgMode}&order=time_ms.asc&limit=10`);
+    if(!Array.isArray(data)||!data.length){
+      el.innerHTML='<div style="color:var(--mut);font-size:10px;text-align:center;padding:6px">No times yet. Be first!</div>';
+      return;
+    }
+    const myId=getPlayerId();
+    const medals=['🥇','🥈','🥉'];
+    el.innerHTML=data.map((p,i)=>{
+      const isMe=p.player_id===myId;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)">
+        <span style="font-size:11px;width:18px">${medals[i]||i+1}</span>
+        <div style="flex:1;font-size:11px;font-weight:${isMe?800:600};color:${isMe?'var(--g)':'var(--txt)'}">${p.player_name}${isMe?' 👈':''}</div>
+        <div style="font-size:12px;font-weight:800;color:${p.time_ms<4000?'var(--g)':p.time_ms<7000?'var(--ylw)':'var(--txt)'}">${fmtTime(p.time_ms)}</div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    el.innerHTML='<div style="color:var(--mut);font-size:10px;text-align:center;padding:6px">Board offline</div>';
+  }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveWeight(){const v=document.getElementById('user-weight').value;if(v)localStorage.setItem('kad_weight',v);}
+function saveGoal(){
+  const v=document.getElementById('user-goal').value;
+  if(v){goal=parseInt(v);localStorage.setItem('kad_goal',v);updateAll();}
+}
+function saveDisplayName(){const v=document.getElementById('my-name').value;if(v)localStorage.setItem('kad_display_name',v);}
+
+function updateBadge(count){
+  if('setAppBadge' in navigator){
+    if(count>0)navigator.setAppBadge(count).catch(()=>{});
+    else navigator.clearAppBadge().catch(()=>{});
+  }
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const tab=document.getElementById('tab-'+name);
+  if(tab) tab.classList.add('active');
+  const idx={home:0,session:1,shotgun:2,concert:3,trail:4,stats:5,merch:6,more:7}[name];
+  if(idx!==undefined){const btn=document.querySelectorAll('.nav-btn')[idx];if(btn)btn.classList.add('active');}
+  if(name==='stats'){renderReportStats();renderHeatmap();renderAchievements(getStats());}
+  if(name==='more'){renderLeaderboard().catch(()=>{});renderSpots();}
+  if(name==='shotgun'){renderShotgunStats();renderGlobalShotgunBoard().catch(()=>{});}
+  if(name==='concert') renderConcertStats();
+  if(name==='trail') loadGoogleMaps().catch(()=>{});
+  if(name==='merch') renderMerch();
+}
+
+// ============================================================
+// SERVICE WORKER
+// ============================================================
+if('serviceWorker' in navigator && navigator.serviceWorker){
+  try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}
+}
+
+// ============================================================
+// INIT
+// ============================================================
+try{
+  // Load settings
+  const w=localStorage.getItem('kad_weight');
+  const g=localStorage.getItem('kad_goal');
+  const n=localStorage.getItem('kad_display_name');
+  const wEl=document.getElementById('user-weight');
+  const gEl=document.getElementById('user-goal');
+  const nEl=document.getElementById('my-name');
+  if(w&&wEl) wEl.value=w; else if(wEl) wEl.value='180';
+  if(g){goal=parseInt(g);if(gEl)gEl.value=g;} else if(gEl) gEl.value='200';
+  if(n&&nEl) nEl.value=n;
+
+  // URL shortcuts
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('action')==='quicklog'){
+    setTimeout(()=>{addLog(BEER_DB[1],1,BEER_DB[1].price,'');showToast('+1 Busch Light logged! 🍺');},300);
+  }
+  if(params.get('tab')) setTimeout(()=>switchTab(params.get('tab')),300);
+
+  // Resume session timer if active
+  if(sessionStart){
+    const btn=document.getElementById('sess-btn');
+    if(btn) btn.textContent='END SESSION';
+    sessTimer=setInterval(updateTimer,1000);
+    updateTimer();
+  }
+
+  updateAll();
+
+  // Splash fade
+  setTimeout(()=>{
+    const splash=document.getElementById('splash');
+    if(splash){splash.style.opacity='0';setTimeout(()=>splash.remove(),600);}
+  },1800);
+
+} catch(e){console.error('Init error:',e);}
+</script>
+</body>
+</html>
