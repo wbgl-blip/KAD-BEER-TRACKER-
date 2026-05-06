@@ -1,0 +1,36 @@
+{
+  "name": "KAD Beer Tracker",
+  "short_name": "KAD Tracker",
+  "description": "Beer tracking app by Kyle's A Dick",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080c08",
+  "theme_color": "#080c08",
+  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Log a Beer",
+      "short_name": "+1 Beer",
+      "url": "/?action=quicklog"
+    },
+    {
+      "name": "Shotgun Timer",
+      "short_name": "Shotgun",
+      "url": "/?tab=shotgun"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
